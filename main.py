@@ -26,8 +26,8 @@ def load_dataset(filename, split):
     with open(filename, 'r') as csv_ds_file:
         lines = csv.reader(csv_ds_file)
         dataset = list(lines)
-        for x in range(len(dataset) - 1):
-            for y in range(4):
+        for x in range(len(dataset)):
+            for y in range(5):
                 dataset[x][y] = float(dataset[x][y])
             if random.random() < split:
                 training_set.append(dataset[x])
@@ -75,12 +75,13 @@ def get_accuracy(test_set, predictions):
 
 def main():
     # prepare data
-    training, test = load_dataset('iris.csv', 0.67)
+    training, test = load_dataset('jogadores-data.csv', 0.7)
+
     print('Train set: ' + repr(len(training)))
     print('Test set: ' + repr(len(test)))
     # generate predictions
     predictions = []
-    k = 11
+    k = 7
     for x in range(len(test)):
         neighbors = get_neighbors(training, test[x], k)
         result = get_response(neighbors)
