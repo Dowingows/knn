@@ -8,18 +8,42 @@ K-NN utilizando o Iris dataset, apenas um teste para avaliar conhecimentos nesse
 '''
 
 
-def euclidean_distance(vector1, vector2):
+def minkowski_distance(vector1, vector2, p):
     if len(vector1) != len(vector2):
         return -1
     diff = 0
     for index in range(len(vector1)):
-        diff += math.pow(vector2[index] - vector1[index], 2)
+        diff += math.pow(vector2[index] - vector1[index], p)
 
-    distance = math.sqrt(diff)
+    distance = math.pow(diff, 1/p)
     return distance
 
 
-def load_dataset(filename, split):
+def euclidean_distance(vector1, vector2):
+    return minkowski_distance(vector1, vector2, 2)
+
+
+def manhattan_distance(vector1, vector2):
+    return minkowski_distance(vector1, vector2, 1)
+
+
+def load_dataset(filename, quant_numbers):
+    dataset = []
+
+    with open(filename, 'r') as csv_ds_file:
+        lines = csv.reader(csv_ds_file)
+        aux_dataset = list(lines)
+
+        for x in range(len(aux_dataset)):
+            for y in range(quant_numbers):
+                aux_dataset[x][y] = float(aux_dataset[x][y])
+
+            dataset.append(aux_dataset[x])
+
+    return dataset
+
+
+def load_train_and_test_dataset(filename, split):
     training_set = []
     test_set = []
 
@@ -73,15 +97,20 @@ def get_accuracy(test_set, predictions):
     return (correct/float(len(test_set))) * 100.0
 
 
-def main():
+def training_test():
     # prepare data
-    training, test = load_dataset('jogadores-data.csv', 0.7)
-
+    training, test = load_train_and_test_dataset('jogadores-data.csv', 0.7)
+    print("+------------+")
+    print("Valores de treino e teste")
+    print(training)
+    print(test)
+    print("+------------+")
     print('Train set: ' + repr(len(training)))
     print('Test set: ' + repr(len(test)))
     # generate predictions
     predictions = []
-    k = 7
+    k = 5
+
     for x in range(len(test)):
         neighbors = get_neighbors(training, test[x], k)
         result = get_response(neighbors)
@@ -90,6 +119,27 @@ def main():
     accuracy = get_accuracy(test, predictions)
 
     print('Accuracy: ' + repr(accuracy) + '%')
+
+
+def main():
+    dataset = load_dataset('jogadores-data.csv', 5)
+    classifications = load_dataset('instancias_para_classificar.csv', 5)
+    print('Dataset: ' + repr(len(dataset)))
+    print('Classification set: ' + repr(len(classifications)))
+
+    # generate predictions
+    predictions = []
+    k = 5
+
+    for x in range(len(classifications)):
+        neighbors = get_neighbors(dataset, classifications[x], k)
+        result = get_response(neighbors)
+        predictions.append((classifications[x][:-1], result))
+
+    with open('sem.txt','a') as f:
+        print(predictions,file = f)
+
+    print(predictions)
 
 
 main()
