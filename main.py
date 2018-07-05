@@ -61,8 +61,21 @@ def load_train_and_test_dataset(filename, split):
     return training_set, test_set
 
 
+def normalize_attributes(element_1):
+    new_element = element_1
+
+    max_val = max(new_element)
+    min_val = min(new_element)
+
+    for x in range(len(element_1)):
+        new_element[x] = (element_1[x] - min_val)/(max_val-min_val)
+
+    return new_element
+
 def get_similarity(element_1, element_2):
-    return euclidean_distance(element_1[:-1], element_2[:-1])
+    elm1 = normalize_attributes(element_1[:-1])
+    elm2 = normalize_attributes(element_2[:-1])
+    return euclidean_distance(elm1, elm2)
 
 
 def get_neighbors(training_set, test_element, k):
@@ -136,7 +149,7 @@ def main():
         result = get_response(neighbors)
         predictions.append((classifications[x][:-1], result))
 
-    with open('sem.txt','a') as f:
+    with open('vale-nada.txt','a') as f:
         print(predictions,file = f)
 
     print(predictions)
