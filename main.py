@@ -211,7 +211,7 @@ dataset = min_max_normalize_dataset(dataset, 5, max_values, min_values)
 
 
 predictions = []
-k = 11
+k = 5
 
 for x in range(len(predict)):
     neighbors = get_neighbors(dataset, predict[x], k)
@@ -220,4 +220,7 @@ for x in range(len(predict)):
 
 for x in range(len(predictions)):
    print(predictions[x])
+
+print(min_values)
+print(max_values)
 
