@@ -67,6 +67,26 @@ def load_train_and_test_dataset(filename, quant_numbers, split):
     return training_set, test_set
 
 
+def get_min_max_dataset(dataset, quant_numbers):
+    max_values = [0 for i in range(quant_numbers)]
+    min_values = [0 for i in range(quant_numbers)]
+
+    for i in range(quant_numbers):
+        max_values[i] = max(data[i] for data in dataset)
+        min_values[i] = min(data[i] for data in dataset)
+
+    return max_values, min_values
+ 
+
+def min_max_normalize_dataset(dataset, quant_numbers, max_values, min_values):
+    new_dataset = copy.deepcopy(dataset)
+    for i in range(len(dataset)):
+        for j in range(quant_numbers):
+          new_dataset[i][j] = (dataset[i][j] - min_values[j])/(max_values[j]-min_values[j])
+    
+    return new_dataset
+
+
 def normalize_dataset(dataset, quant_numbers):
     max_values = [0 for i in range(quant_numbers)]
     min_values = [0 for i in range(quant_numbers)]
@@ -178,7 +198,26 @@ def print_on_file_list(custom_list,file_name):
 
 
 #training_test()
-main()
+#main()
+dataset = load_dataset('jogadores-data.csv', 5)
+predict = load_dataset('instancias_para_classificar.csv', 5)
+
+'''
+NORMALIZANDO DATASET
+'''
+max_values, min_values = get_min_max_dataset(dataset,5)
+predict = min_max_normalize_dataset(predict, 5, max_values, min_values)
+dataset = min_max_normalize_dataset(dataset, 5, max_values, min_values)
 
 
+predictions = []
+k = 11
+
+for x in range(len(predict)):
+    neighbors = get_neighbors(dataset, predict[x], k)
+    result = get_response(neighbors)
+    predictions.append((predict[x][:-1], result))
+
+for x in range(len(predictions)):
+   print(predictions[x])
 
