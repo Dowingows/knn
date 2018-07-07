@@ -16,9 +16,9 @@ def minkowski_distance(vector1, vector2, p):
         return -1
     diff = 0
     for index in range(len(vector1)):
-        diff += math.pow(vector2[index] - vector1[index], p)
+        diff += math.pow((vector2[index] - vector1[index]), p)
 
-    distance = math.pow(diff, 1/p)
+    distance = float(diff)**(1/float(p))
     return distance
 
 
@@ -27,12 +27,14 @@ def euclidean_distance(vector1, vector2):
 
 
 def manhattan_distance(vector1, vector2):
-    return minkowski_distance(vector1, vector2, 1)
+    return minkowski_distance(vector1, vector2, 3)
 
 
 '''
-#====== FIM DAS FUNÇÕES PARA CALCULAR DISTÂNCIAS ENTRE VETORES
+#====== CARREGANDO OS DATASETS
 '''
+
+
 def load_dataset(filename, quant_numbers):
     dataset = []
 
@@ -66,6 +68,9 @@ def load_train_and_test_dataset(filename, quant_numbers, split):
 
     return training_set, test_set
 
+'''
+#====== NORMALIZAÇÃO DO DATASET
+'''
 
 def get_min_max_dataset(dataset, quant_numbers):
     max_values = [0 for i in range(quant_numbers)]
@@ -86,31 +91,10 @@ def min_max_normalize_dataset(dataset, quant_numbers, max_values, min_values):
     
     return new_dataset
 
+'''
+#====== FUNÇÃO DO ALGORITMO KNN
+'''
 
-def normalize_dataset(dataset, quant_numbers):
-    max_values = [0 for i in range(quant_numbers)]
-    min_values = [0 for i in range(quant_numbers)]
-
-    for i in range(quant_numbers):
-        max_values[i] = max(data[i] for data in dataset)
-        min_values[i] = min(data[i] for data in dataset)
-
-    for i in range(len(dataset)):
-        for j in range(quant_numbers):
-            dataset[i][j] = (dataset[i][j] - min_values[j])/(max_values[j]-min_values[j])
-
-    return dataset
-
-def normalize_attributes(element_1):
-    new_element = element_1
-
-    max_val = max(new_element)
-    min_val = min(new_element)
-
-    for x in range(len(element_1)):
-        new_element[x] = (element_1[x] - min_val)/(max_val-min_val)
-
-    return new_element
 
 def get_similarity(element_1, element_2):
     return euclidean_distance(element_1[:-1], element_2[:-1])
@@ -140,6 +124,11 @@ def get_response(neighbors):
     return sorted_votes[0][0]
 
 
+'''
+#====== FUNÇÕES MISCELANEAS
+'''
+
+
 def get_accuracy(test_set, predictions):
     correct = 0
     for x in range(len(test_set)):
@@ -150,9 +139,15 @@ def get_accuracy(test_set, predictions):
 
 def training_test():
     # prepare data
-    training, test = load_train_and_test_dataset('jogadores-data.csv',5, 0.7)
-    training = normalize_dataset(training, 5)
-    test = normalize_dataset(test, 5)
+    n = random.randint(1,3)
+    print(n)
+    training = load_dataset(('treino-0{0}.csv'.format(n)), 5)
+    test = load_dataset(('teste-0{0}.csv'.format(n)), 5)
+
+    max_values, min_values = get_min_max_dataset(training, 5)
+    training = min_max_normalize_dataset(training, 5, max_values, min_values)
+    test = min_max_normalize_dataset(test, 5, max_values, min_values)
+
     print("+------------+")
     print("Valores de treino e teste")
     print(training)
@@ -162,7 +157,7 @@ def training_test():
     print('Test set: ' + repr(len(test)))
     # generate predictions
     predictions = []
-    k = 5
+    k = 2
 
     for x in range(len(test)):
         neighbors = get_neighbors(training, test[x], k)
@@ -175,8 +170,13 @@ def training_test():
 
 
 def main():
-    dataset = normalize_dataset(load_dataset('jogadores-data.csv', 5),5)
-    classifications = normalize_dataset(load_dataset('instancias_para_classificar.csv', 5),5)
+    dataset = load_dataset('jogadores-data.csv', 5)
+    instances = load_dataset('instancias_para_classificar.csv', 5)
+
+    max_values, min_values = get_min_max_dataset(dataset, 5)
+
+    dataset = min_max_normalize_dataset(dataset, 5, max_values, min_values)
+    classifications = min_max_normalize_dataset(instances, 5, max_values, min_values)
 
     # generate predictions
     predictions = []
@@ -185,42 +185,38 @@ def main():
     for x in range(len(classifications)):
         neighbors = get_neighbors(dataset, classifications[x], k)
         result = get_response(neighbors)
-        predictions.append((classifications[x][:-1], result))
+        predictions.append((instances[x][:-1], result))
 
-    print_on_file_list(predictions,'test01.csv')
+    print_on_file_list(predictions,'report.csv')
 
-    print(predictions)
+    for data in predictions:
+        print(', '.join(str(int(x)) for x in data[0]) + ', ' + str(data[1]))
 
 
-def print_on_file_list(custom_list,file_name):
-    with open(file_name, 'a') as f:
-        print(custom_list, file = f)
+def print_on_file_list(predictions,file_name):
+    with open(file_name, 'w') as f:
+        for data in predictions:
+            print(', '.join(str(int(x)) for x in data[0])+', '+str(data[1]), file = f)
 
 
 #training_test()
-#main()
-dataset = load_dataset('jogadores-data.csv', 5)
-predict = load_dataset('instancias_para_classificar.csv', 5)
+main()
+#dataset = load_dataset('jogadores-data.csv', 5)
+#predict = load_dataset('instancias_para_classificar.csv', 5)
 
 '''
 NORMALIZANDO DATASET
 '''
+
+'''
 max_values, min_values = get_min_max_dataset(dataset,5)
-predict = min_max_normalize_dataset(predict, 5, max_values, min_values)
+predictions = min_max_normalize_dataset(predict, 5, max_values, min_values)
 dataset = min_max_normalize_dataset(dataset, 5, max_values, min_values)
 
-
-predictions = []
-k = 5
-
-for x in range(len(predict)):
-    neighbors = get_neighbors(dataset, predict[x], k)
-    result = get_response(neighbors)
-    predictions.append((predict[x][:-1], result))
-
-for x in range(len(predictions)):
-   print(predictions[x])
-
-print(min_values)
-print(max_values)
-
+print("*-- Dataset")
+for ds in dataset:
+    print (ds)
+print("*-- Predictions")
+for predict in predictions:
+    print (predict)
+'''
