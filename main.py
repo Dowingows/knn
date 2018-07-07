@@ -27,7 +27,7 @@ def euclidean_distance(vector1, vector2):
 
 
 def manhattan_distance(vector1, vector2):
-    return minkowski_distance(vector1, vector2, 3)
+    return minkowski_distance(vector1, vector2, 1)
 
 
 '''
@@ -109,11 +109,13 @@ def get_neighbors(training_set, test_element, k):
     neighbors = []
     for x in range(k):
         neighbors.append(distances[x][0])
+
     return neighbors
 
-
+'''
 def get_response(neighbors):
     class_votes = {}
+
     for x in range(len(neighbors)):
         response = neighbors[x][-1]
         if response in class_votes:
@@ -121,7 +123,29 @@ def get_response(neighbors):
         else:
             class_votes[response] = 1
     sorted_votes = sorted(class_votes.items(), key=operator.itemgetter(1), reverse=True)
+    #print (sorted_votes)
     return sorted_votes[0][0]
+'''
+
+'''
+Usando pesos. Desta forma, os mais próximos tem mais valor de voto do que os mais distantes. 
+https://www.python-course.eu/k_nearest_neighbor_classifier.php
+'''
+def get_response(neighbors):
+    class_votes = {}
+    weight  = 1
+    for x in range(len(neighbors)):
+        response = neighbors[x][-1]
+        if response in class_votes:
+            class_votes[response] += float(1/weight)
+        else:
+            class_votes[response] = float(1/weight)
+
+        weight += 1
+    sorted_votes = sorted(class_votes.items(), key=operator.itemgetter(1), reverse=True)
+
+    return sorted_votes[0][0]
+
 
 
 '''
@@ -140,7 +164,6 @@ def get_accuracy(test_set, predictions):
 def training_test():
     # prepare data
     n = random.randint(1,3)
-    print(n)
     training = load_dataset(('treino-0{0}.csv'.format(n)), 5)
     test = load_dataset(('teste-0{0}.csv'.format(n)), 5)
 
@@ -157,7 +180,7 @@ def training_test():
     print('Test set: ' + repr(len(test)))
     # generate predictions
     predictions = []
-    k = 2
+    k = 5
 
     for x in range(len(test)):
         neighbors = get_neighbors(training, test[x], k)
@@ -180,7 +203,7 @@ def main():
 
     # generate predictions
     predictions = []
-    k = 5
+    k = 7
 
     for x in range(len(classifications)):
         neighbors = get_neighbors(dataset, classifications[x], k)
